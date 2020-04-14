@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /userdetails/{userId} {
+      allow read: if isTheUser();
+      allow write: if isTheUser();
+      allow update: if isTheUser();
+      allow delete: if isTheUser();
+      function isTheUser()
+      {
+      	//is the user editing his info?
+      	return request.auth.uid == userId;
+      }
+    }
+    
+    match /teams/{teamId} {      
+      allow read: if request.auth.uid in resource.data.admins || ("trainees" in getDataKeys() && request.auth.uid in getTrainee());
+      allow write: if request.auth.uid in resource.data.admins;
+      
+      function getTrainee() {
+        return resource.data['trainees'].keys();
+    	}
+      
+      function getDataKeys() {
+      	return resource.data.keys()
+      }
+    }
+    
+    match /coursetemplates/{document=**} {
+      allow read, write;
+    }
+    
+    match /course/{document=**} {
+      allow read, write;
+    }
+    
+    match /billingdetails/{document=**} {
+      allow read, write;
+    }
+    
+    match /accesscodes/{document=**} {
+      allow read, write;
+    }
+  }
+}
